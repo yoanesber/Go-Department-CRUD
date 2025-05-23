@@ -611,3 +611,31 @@ Precondition:
   "timestamp": "2025-05-23T15:46:37Z"
 }
 ```
+
+### 💾 Redis Token Retrieval API Testing Scenario
+
+**Endpoint**: `GET https://localhost:1000/api/v1/dataredis/json/{:key}`
+**Description**: Retrieve an access token and related information stored in Redis using a specific Redis key.
+
+#### ✅ Scenario 1: Successfully Retrieve Access Token from Redis
+
+**Redis Key**: `access_token:admin`
+
+**Request**: `GET https://localhost:1000/api/v1/dataredis/json/access_token:admin`
+
+**Response**:
+```json
+{
+    "message": "JSON value retrieved successfully",
+    "error": null,
+    "path": "/api/v1/dataredis/json/access_token:admin",
+    "status": 200,
+    "data": {
+        "accessToken": "<JWT>",
+        "expirationDate": "2025-05-25T16:01:29Z",
+        "refreshToken": "<UUID>",
+        "tokenType": "Bearer"
+    },
+    "timestamp": "2025-05-23T16:40:54.770426202Z"
+}
+```
