@@ -1,4 +1,4 @@
-# Department API Service
+# Department API Service – Secure RESTful API with JWT Auth, Redis Caching & Rate Limiting
 
 A secure, scalable, and modular RESTful API service built with **Go**, using the **Gin** web framework and **GORM** ORM. This service manages CRUD operations for the `Department` entity with full **JWT-based authentication** and **Redis caching**. It integrates with **PostgreSQL** as the main database and **Redis** for session/token storage.
 
@@ -23,13 +23,6 @@ This application provides a **secure**, **token-based authentication system usin
 
 - **CRUD API for Department** entity:
   - All routes are protected by JWT Bearer Token via `Authorization` header.
-
-- **Token Lifecycle**:
-[`Client`] → **POST** `/auth/login` → [`AccessToken` + `RefreshToken`]
-            ↓                                   ↓
-[**Authorization Header**]          Saved to Redis: `access_token:<username>`
-            ↓                                   ↓
-[**Protected /department API**]     Used for frontend token refresh & cache
 
 
 ### 🛡️ Security & Middleware
@@ -215,11 +208,11 @@ TOKEN_TYPE=Bearer
   - `DB_TIMEZONE=Asia/Jakarta`: Adjust this value to your local timezone (e.g., `America/New_York`, etc.).
   - `DB_MIGRATE=TRUE`: Set to `TRUE` to automatically run `GORM` migrations for all entity definitions on app startup.
   - `DB_SEED=TRUE` & `DB_SEED_FILE=import.sql`: Use these settings if you want to insert predefined data into the database using the SQL file provided.
-  - `DB_USER=appuser`, `DB_PASS=app@123`: It's strongly recommended to create a dedicated database user instead of using the default postgres superuser. You can create one using the following SQL:
+  - `DB_USER=appuser`, `DB_PASS=app@123`: It's strongly recommended to create a dedicated database user instead of using the default postgres superuser.
 
 ### 🔑 Generate RSA Key for JWT (If Using `RS256`)  
 
-If you are using `JWT_ALGORITHM=RS256`, generate the **RSA key** pair for **JWT signing**:  
+If you are using `JWT_ALGORITHM=RS256`, generate the **RSA key** pair for **JWT signing** by running this file:  
 ```bash
 ./generate-jwt-key.sh
 ```
@@ -242,7 +235,7 @@ JWT_ALGORITHM=RS256
 
 ### 🔐 Generate Certificate for HTTPS (Optional)  
 
-If `IS_SSL=TRUE` in your `.env`, generate the certificate files:  
+If `IS_SSL=TRUE` in your `.env`, generate the certificate files by running this file:  
 ```bash
 ./generate-certificate.sh
 ```
@@ -343,6 +336,8 @@ https://localhost:1000 (if SSL is enabled)
 ## 🧪 Testing Scenarios  
 
 ### 🔐 Login API
+
+**Endpoint**: `POST https://localhost:1000/auth/login`
 
 #### ✅ Scenario 1: Successful Login
 
@@ -479,6 +474,8 @@ Precondition:
 
 ### 🔄 Refresh Token API
 
+**Endpoint**: `POST https://localhost:1000/auth/refresh-token`
+
 #### ✅ Scenario 1: Successful Refresh Token
 
 **Request**:
@@ -553,6 +550,8 @@ Precondition:
 ```
 
 ### 🏢 Department API
+
+**Endpoint**: `https://localhost:1000/api/v1/departments`
 
 #### ✅ Scenario 1: Successful Retrieval (All Departments)
 
