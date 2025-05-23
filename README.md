@@ -444,7 +444,7 @@ UPDATE users SET is_enabled = false WHERE id = 2;
 }
 ```
 
-#### Scenario 4: Rate Limit Exceeded on Login
+#### ⏳ Scenario 4: Rate Limit Exceeded on Login
 
 Precondition:
   - The rate limiter is configured as:
