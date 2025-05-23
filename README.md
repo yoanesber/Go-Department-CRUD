@@ -320,6 +320,13 @@ To stop and remove all containers:
 make stop-all
 ```
 
+- **Notes**:  
+  - Before running the application inside Docker, make sure to update your environment variables `.env`
+    - Change `DB_HOST=localhost` to `DB_HOST=postgres-server`.
+    - Change `REDIS_HOST=localhost` to `REDIS_HOST=redis-server`.
+
+### Application is Running
+
 Now your application is accessible at:
 ```bash
 http://localhost:1000
