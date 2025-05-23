@@ -2,6 +2,7 @@ package tests
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -10,79 +11,100 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"github.com/yoanesber/Go-Department-CRUD/controller"
-	"github.com/yoanesber/Go-Department-CRUD/model"
+	dept "github.com/yoanesber/Go-Department-CRUD/internal/department"
+	"github.com/yoanesber/Go-Department-CRUD/pkg/util"
 )
 
 // SetupSampleDepartment creates a sample department object for testing purposes
 // It returns a Department struct with sample data
-func GetSampleDepartment() model.Department {
-	return model.Department{
-		ID:          "d001",
-		DeptName:    "HR",
-		Active:      true,
-		CreatedBy:   1,
-		CreatedDate: time.Now(),
-		UpdatedBy:   1,
-		UpdatedDate: time.Now(),
+func GetSampleDepartment() dept.Department {
+	now := time.Now()
+	createdBy := int64(1)
+	updatedBy := int64(1)
+	return dept.Department{
+		ID:        "d001",
+		DeptName:  "HR",
+		Active:    true,
+		CreatedBy: &createdBy,
+		CreatedAt: &now,
+		UpdatedBy: &updatedBy,
+		UpdatedAt: &now,
 	}
 }
 
 // SetupSampleDepartments creates a slice of sample department objects for testing purposes
 // It returns a slice of Department structs with sample data
-func GetSampleDepartments() []model.Department {
-	return []model.Department{
+func GetSampleDepartments() []dept.Department {
+	now := time.Now()
+	createdBy := int64(1)
+	updatedBy := int64(1)
+	return []dept.Department{
 		{
-			ID:          "d001",
-			DeptName:    "HR",
-			Active:      true,
-			CreatedBy:   1,
-			CreatedDate: time.Now(),
-			UpdatedBy:   1,
-			UpdatedDate: time.Now(),
+			ID:        "d001",
+			DeptName:  "HR",
+			Active:    true,
+			CreatedBy: &createdBy,
+			CreatedAt: &now,
+			UpdatedBy: &updatedBy,
+			UpdatedAt: &now,
 		},
 		{
-			ID:          "d002",
-			DeptName:    "IT",
-			Active:      true,
-			CreatedBy:   1,
-			CreatedDate: time.Now(),
-			UpdatedBy:   1,
-			UpdatedDate: time.Now(),
+			ID:        "d002",
+			DeptName:  "IT",
+			Active:    true,
+			CreatedBy: &createdBy,
+			CreatedAt: &now,
+			UpdatedBy: &updatedBy,
+			UpdatedAt: &now,
 		},
 	}
 }
 
+// MockService is an interface that defines the methods for department management.
+type MockService interface {
+	GetAllDepartments(ctx context.Context) ([]dept.Department, error)
+	GetDepartmentByID(ctx context.Context, id string) (dept.Department, error)
+	CreateDepartment(ctx context.Context, department dept.Department) (dept.Department, error)
+	UpdateDepartment(ctx context.Context, id string, department dept.Department) (dept.Department, error)
+	DeleteDepartment(ctx context.Context, id string) (bool, error)
+}
+
 // MockService is a mock implementation of the DepartmentService interface for testing purposes.
-type MockService struct{}
+type mockService struct{}
+
+// newMockService creates a new instance of MockService.
+// It initializes the MockService struct and returns it.
+func newMockService() MockService {
+	return &mockService{}
+}
 
 // Mock implementation of the DepartmentService.GetAllDepartments method
 // This method returns a list of departments for testing purposes
-func (m *MockService) GetAllDepartments() ([]model.Department, error) {
+func (m *mockService) GetAllDepartments(ctx context.Context) ([]dept.Department, error) {
 	return GetSampleDepartments(), nil
 }
 
 // Mock implementation of the DepartmentService.GetDepartmentByID method
 // This method returns a single department for testing purposes
-func (m *MockService) GetDepartmentByID(id string) (model.Department, error) {
+func (m *mockService) GetDepartmentByID(ctx context.Context, id string) (dept.Department, error) {
 	return GetSampleDepartment(), nil
 }
 
 // Mock implementation of the DepartmentService.CreateDepartment method
 // This method creates a new department for testing purposes
-func (m *MockService) CreateDepartment(department model.Department) (model.Department, error) {
-	return department, nil
+func (m *mockService) CreateDepartment(ctx context.Context, department dept.Department) (dept.Department, error) {
+	return GetSampleDepartment(), nil
 }
 
 // Mock implementation of the DepartmentService.UpdateDepartment method
 // This method updates an existing department for testing purposes
-func (m *MockService) UpdateDepartment(id string, department model.Department) (model.Department, error) {
-	return department, nil
+func (m *mockService) UpdateDepartment(ctx context.Context, id string, department dept.Department) (dept.Department, error) {
+	return GetSampleDepartment(), nil
 }
 
 // Mock implementation of the DepartmentService.DeleteDepartment method
 // This method deletes a department for testing purposes
-func (m *MockService) DeleteDepartment(id string) (bool, error) {
+func (m *mockService) DeleteDepartment(ctx context.Context, id string) (bool, error) {
 	return true, nil
 }
 
@@ -90,11 +112,15 @@ func (m *MockService) DeleteDepartment(id string) (bool, error) {
 // It uses the MockService for testing purposes
 func SetupRouter() *gin.Engine {
 	// Define a mock service for testing
-	mock := &MockService{}
-	ctrl := &controller.DepartmentController{Service: mock}
+	mock := newMockService()
+
+	// Initialize the department handler with the mock service
+	handler := dept.NewDepartmentHandler(mock)
 
 	// Create a new Gin router instance
 	r := gin.Default()
+
+	// Set the Gin mode to TestMode
 	gin.SetMode(gin.TestMode)
 
 	// Set up the API version group
@@ -103,23 +129,24 @@ func SetupRouter() *gin.Engine {
 	{
 		// Routes for department management
 		// These routes handle CRUD operations for departments
-		dept := v1.Group("/departments")
+		deptGroup := v1.Group("/departments")
 		{
-			dept.GET("", ctrl.GetAllDepartments)
-			dept.GET("/:id", ctrl.GetDepartmentByID)
-			dept.POST("", ctrl.CreateDepartment)
-			dept.PUT("/:id", ctrl.UpdateDepartment)
-			dept.DELETE("/:id", ctrl.DeleteDepartment)
+			deptGroup.GET("", handler.GetAllDepartments)
+			deptGroup.GET("/:id", handler.GetDepartmentByID)
+			deptGroup.POST("", handler.CreateDepartment)
+			deptGroup.PUT("/:id", handler.UpdateDepartment)
+			deptGroup.DELETE("/:id", handler.DeleteDepartment)
 		}
 	}
 
 	return r
 }
 
-func ConvertHttpResponseToDepartment(t *testing.T, resp *httptest.ResponseRecorder) (model.Department, error) {
+func ConvertHttpResponseToDepartment(t *testing.T, resp *httptest.ResponseRecorder) (dept.Department, error) {
 	// Unmarshal the response body into a HttpResponse object
 	// The HttpResponse object contains the data returned by the server
-	var httpResponse model.HttpResponse
+	var httpResponse util.HttpResponse
+
 	err := json.Unmarshal(resp.Body.Bytes(), &httpResponse)
 	if err != nil {
 		t.Fatalf("Failed to unmarshal response body: %v", err)
@@ -134,13 +161,13 @@ func ConvertHttpResponseToDepartment(t *testing.T, resp *httptest.ResponseRecord
 
 	// Unmarshal the JSON data into a Department object
 	// This is done to ensure that the Data can be converted back to a Department object
-	var dept model.Department
-	err = json.Unmarshal(jsonData, &dept)
+	var d dept.Department
+	err = json.Unmarshal(jsonData, &d)
 	if err != nil {
-		return model.Department{}, err
+		return dept.Department{}, err
 	}
 
-	return dept, nil
+	return d, nil
 }
 
 func TestGetAllDepartments(t *testing.T) {
@@ -168,7 +195,7 @@ func TestGetAllDepartments(t *testing.T) {
 
 	// Unmarshal the response body into a HttpResponse object
 	// The HttpResponse object contains the data returned by the server
-	var httpResponse model.HttpResponse
+	var httpResponse util.HttpResponse
 	err = json.Unmarshal(resp.Body.Bytes(), &httpResponse)
 	if err != nil {
 		t.Fatalf("Failed to unmarshal response body: %v", err)
@@ -203,22 +230,22 @@ func TestGetDepartmentByID(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.Code, "Expected status code 200 OK")
 
 	// Convert the response to a Department object
-	dept, err := ConvertHttpResponseToDepartment(t, resp)
+	d, err := ConvertHttpResponseToDepartment(t, resp)
 	if err != nil {
 		t.Fatalf("Failed to convert response to Department: %v", err)
 	}
 
 	// Check if the department ID and name match the expected values
 	// This is done to ensure that the Data contains the expected values
-	assert.Equal(t, GetSampleDepartment().ID, dept.ID, "Expected department ID to match")
-	assert.Equal(t, GetSampleDepartment().DeptName, dept.DeptName, "Expected department name to match")
+	assert.Equal(t, GetSampleDepartment().ID, d.ID, "Expected department ID to match")
+	assert.Equal(t, GetSampleDepartment().DeptName, d.DeptName, "Expected department name to match")
 }
 
 func TestCreateDepartment(t *testing.T) {
 	r := SetupRouter()
 
 	// Sample department data
-	newDept := model.Department{
+	newDept := dept.Department{
 		ID:        GetSampleDepartment().ID,
 		DeptName:  GetSampleDepartment().DeptName,
 		Active:    GetSampleDepartment().Active,
@@ -263,7 +290,7 @@ func TestUpdateDepartment(t *testing.T) {
 	r := SetupRouter()
 
 	// Sample update data
-	updateDept := model.Department{
+	updateDept := dept.Department{
 		DeptName:  GetSampleDepartment().DeptName,
 		Active:    GetSampleDepartment().Active,
 		UpdatedBy: GetSampleDepartment().UpdatedBy,

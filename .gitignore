@@ -13,8 +13,9 @@ hs_err_pid*
 
 ### SENSITVE DATA ###
 .gitconfig
-.env*
+.env
 cert/
+keys/
 
 ### BUILD ###
 ./gin-boilerplate
@@ -26,11 +27,6 @@ cert/
 *.so
 *.dylib
 *.test
-
-### Sertifikat dan key ###
-cert/*.key
-cert/*.cer
-cert/*.srl
 
 ### Ignore Visual Studio Code files ###
 .vscode/
