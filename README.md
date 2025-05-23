@@ -325,7 +325,7 @@ make stop-all
     - Change `DB_HOST=localhost` to `DB_HOST=postgres-server`.
     - Change `REDIS_HOST=localhost` to `REDIS_HOST=redis-server`.
 
-### Application is Running
+### 🟢 Application is Running
 
 Now your application is accessible at:
 ```bash
