@@ -66,3 +66,6 @@ run:
 test:
 	@echo -e "Running tests..."
 	@dotenv -e .env -- go test -v ./tests/department_test.go
+
+.PHONY: create-network remove-network build-postgres run-postgres remove-postgres \
+	build-redis run-redis remove-redis build-app run-app remove-app start-all stop-all run test
