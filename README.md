@@ -118,16 +118,7 @@ This project follows a **modular** and **maintainable** architecture inspired by
 │   │   ├── 📂redisutil/                    # Wrapper utilities for working with Redis data types
 │   └── 📂validator/                        # Custom request validation using go-playground/validator.v9
 ├── 📂routes/                               # Route definitions, groups APIs, and applies middleware per route scope
-├── 📂tests/                                # Contains unit or integration tests for business logic
-├── .dockerignore
-├── .env
-├── .gitignore
-├── generate-certificate.sh                 # Script to generate self-signed certificates using OpenSSL
-├── generate-jwt-key.sh                     # Script to generate RSA key pairs for JWT signing/verification
-├── go.mod
-├── go.sum
-├── import.sql                              # Optional SQL script to import initial database records or mock data
-└── Makefile                                # Provides CLI shortcuts to build, run, test, or manage Docker containers and environments
+└── 📂tests/                                # Contains unit or integration tests for business logic
 ```
 
 ---
